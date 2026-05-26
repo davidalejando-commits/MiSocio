@@ -3,8 +3,18 @@ import * as SQLite from 'expo-sqlite';
 
 const db = SQLite.openDatabaseSync('workmanager.db');
 
+function ahoraCol(): string {
+  const now = new Date();
+  // UTC-5 manual — sin toLocaleString que falla en algunos entornos de Expo
+  const utcMs = now.getTime();
+  const colMs = utcMs - (5 * 60 * 60 * 1000);
+  const col = new Date(colMs);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${col.getUTCFullYear()}-${pad(col.getUTCMonth() + 1)}-${pad(col.getUTCDate())} `
+       + `${pad(col.getUTCHours())}:${pad(col.getUTCMinutes())}:${pad(col.getUTCSeconds())}`;
+}
+
 export function initDatabase() {
-  
   db.execSync(`
     PRAGMA journal_mode = WAL;
 
@@ -58,17 +68,37 @@ export function initDatabase() {
       created_at TEXT,
       FOREIGN KEY (cliente_id) REFERENCES clientes(id)
     );
-  `);
-   db.execSync(`
-    UPDATE ventas 
-    SET created_at = '2026-05-22 00:00:00' 
-    WHERE created_at IS NULL OR created_at = '' OR created_at = 'NaN';
 
-    UPDATE abonos 
-    SET created_at = '2026-05-22 00:00:00' 
-    WHERE created_at IS NULL OR created_at = '' OR created_at = 'NaN';
+    CREATE TABLE IF NOT EXISTS _migraciones (
+      id INTEGER PRIMARY KEY,
+      nombre TEXT UNIQUE,
+      aplicada_en TEXT
+    );
   `);
 
+  const mig1 = db.getFirstSync(
+    `SELECT id FROM _migraciones WHERE nombre = 'fix_fechas_nulas'`
+  );
+  if (!mig1) {
+    const ahora = ahoraCol();
+    db.runSync(`UPDATE ventas SET created_at = ? WHERE created_at IS NULL OR TRIM(created_at) = ''`, ahora);
+    db.runSync(`UPDATE abonos SET created_at = ? WHERE created_at IS NULL OR TRIM(created_at) = ''`, ahora);
+    db.runSync(`UPDATE clientes SET created_at = ? WHERE created_at IS NULL OR TRIM(created_at) = ''`, ahora);
+    db.runSync(`UPDATE productos SET created_at = ? WHERE created_at IS NULL OR TRIM(created_at) = ''`, ahora);
+    db.runSync(`INSERT INTO _migraciones (nombre, aplicada_en) VALUES ('fix_fechas_nulas', ?)`, ahora);
+  }
+
+  const mig2 = db.getFirstSync(
+    `SELECT id FROM _migraciones WHERE nombre = 'fix_fechas_nan_string'`
+  );
+  if (!mig2) {
+    const ahora = ahoraCol();
+    db.runSync(`UPDATE ventas SET created_at = ? WHERE created_at LIKE '%NaN%' OR created_at LIKE '%nan%'`, ahora);
+    db.runSync(`UPDATE abonos SET created_at = ? WHERE created_at LIKE '%NaN%' OR created_at LIKE '%nan%'`, ahora);
+    db.runSync(`UPDATE clientes SET created_at = ? WHERE created_at LIKE '%NaN%' OR created_at LIKE '%nan%'`, ahora);
+    db.runSync(`UPDATE productos SET created_at = ? WHERE created_at LIKE '%NaN%' OR created_at LIKE '%nan%'`, ahora);
+    db.runSync(`INSERT INTO _migraciones (nombre, aplicada_en) VALUES ('fix_fechas_nan_string', ?)`, ahora);
+  }
 }
 
 export default db;

@@ -163,11 +163,13 @@ export default function EstadoCuentaScreen({ navigation, route }: any) {
   };
 
   const parseFecha = (fecha: string): Date | null => {
-    if (!fecha || fecha.includes("NaN")) return null;
-    const iso = fecha.trim().replace(" ", "T");
-    const d = new Date(iso);
-    return isNaN(d.getTime()) ? null : d;
-  };
+  if (!fecha) return null;
+  if (fecha.includes('NaN') || fecha.includes('nan')) return null;
+  if (fecha.trim() === '') return null;  // ← trim() en minúscula, es JS
+  const iso = fecha.trim().replace(' ', 'T');
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? null : d;
+};
 
   const formatFecha = (fecha: string) => {
     const d = parseFecha(fecha);

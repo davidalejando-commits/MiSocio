@@ -63,12 +63,13 @@ export default function HistorialScreen() {
     .reduce((acc, v) => acc + v.total, 0);
 
   const parseFecha = (fecha: string): Date | null => {
-    if (!fecha || fecha.includes("NaN")) return null;
-    // "2026-05-22 03:59:35" → "2026-05-22T03:59:35"
-    const iso = fecha.trim().replace(" ", "T");
-    const d = new Date(iso);
-    return isNaN(d.getTime()) ? null : d;
-  };
+  if (!fecha) return null;
+  if (fecha.includes('NaN') || fecha.includes('nan')) return null;
+  if (fecha.trim() === '') return null;  // ← trim() en minúscula, es JS
+  const iso = fecha.trim().replace(' ', 'T');
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? null : d;
+};
 
   const formatFecha = (fecha: string) => {
     const d = parseFecha(fecha);

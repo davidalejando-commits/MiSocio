@@ -1,14 +1,14 @@
 import db from './database';
 import { Venta } from '../types';
 
-// Genera timestamp en hora Colombia para insertar en SQLite
 function ahoraCol(): string {
   const now = new Date();
-  // Convierte a hora Colombia (UTC-5)
-  const col = new Date(now.toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+  const utcMs = now.getTime();
+  const colMs = utcMs - (5 * 60 * 60 * 1000);
+  const col = new Date(colMs);
   const pad = (n: number) => String(n).padStart(2, '0');
-  return `${col.getFullYear()}-${pad(col.getMonth()+1)}-${pad(col.getDate())} `
-       + `${pad(col.getHours())}:${pad(col.getMinutes())}:${pad(col.getSeconds())}`;
+  return `${col.getUTCFullYear()}-${pad(col.getUTCMonth() + 1)}-${pad(col.getUTCDate())} `
+       + `${pad(col.getUTCHours())}:${pad(col.getUTCMinutes())}:${pad(col.getUTCSeconds())}`;
 }
 
 export function obtenerVentas(): Venta[] {
@@ -51,7 +51,7 @@ export function crearVenta(
       total,
       tipoPago,
       estado,
-      ahoraCol()  // ← timestamp Colombia explícito, no el DEFAULT UTC de SQLite
+      ahoraCol() 
     );
     const ventaId = result.lastInsertRowId;
 

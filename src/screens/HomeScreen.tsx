@@ -51,15 +51,15 @@ export default function HomeScreen({ navigation }: any) {
   );
 
   const formatFecha = (fecha: string) => {
-    if (!fecha || fecha === "null") return "Sin fecha";
-    const d = new Date(fecha.replace(" ", "T"));
-    if (isNaN(d.getTime())) return "Sin fecha";
-    return d.toLocaleTimeString("es-CO", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  if (!fecha || fecha.includes('NaN') || fecha.trim() === '') return 'Sin fecha';
+  const d = new Date(fecha.trim().replace(' ', 'T'));
+  if (isNaN(d.getTime())) return 'Sin fecha';
+  return d.toLocaleTimeString('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
 
   return (
     <SafeAreaView style={styles.safe}>
