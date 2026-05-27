@@ -83,12 +83,12 @@ export default function AppNavigator() {
         <Tab.Screen
           name="Home"
           component={HomeStack}
-          options={{ title: "Home" }}
+          options={{ title: "Casa" }}
         />
         <Tab.Screen
           name="Clients"
           component={ClientesStack}
-          options={{ title: "Clients" }}
+          options={{ title: "Clientes" }}
         />
         <Tab.Screen
   name="Sales"
@@ -119,12 +119,12 @@ export default function AppNavigator() {
         <Tab.Screen
           name="Inventory"
           component={InventarioStack}
-          options={{ title: "Inventory" }}
+          options={{ title: "Inventario" }}
         />
         <Tab.Screen
           name="History"
           component={HistorialScreen}
-          options={{ title: "History" }}
+          options={{ title: "Historial" }}
         />
       </Tab.Navigator>
     </NavigationContainer>

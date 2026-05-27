@@ -26,15 +26,52 @@ interface ItemCarrito {
   cantidad: number;
 }
 
+// ── Helper avatar ─────────────────────────────────────
+function AvatarCliente({ cliente, size = 40 }: { cliente: Cliente; size?: number }) {
+  const iniciales = cliente.nombre
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  if (cliente.foto_uri) {
+    return (
+      <Image
+        source={{ uri: cliente.foto_uri }}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+        }}
+      />
+    );
+  }
+
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: "#EEF0FF",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Text style={{ fontSize: size * 0.35, fontWeight: "700", color: "#1A56FF" }}>
+        {iniciales}
+      </Text>
+    </View>
+  );
+}
+
 export default function NuevaVentaScreen({ navigation }: any) {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
-  const [clienteSeleccionado, setClienteSeleccionado] =
-    useState<Cliente | null>(null);
-  const [tipoPago, setTipoPago] = useState<
-    "efectivo" | "transferencia" | "credito"
-  >("efectivo");
+  const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(null);
+  const [tipoPago, setTipoPago] = useState<"efectivo" | "transferencia" | "credito">("efectivo");
   const [busquedaProducto, setBusquedaProducto] = useState("");
   const [modalCliente, setModalCliente] = useState(false);
   const [modalResumen, setModalResumen] = useState(false);
@@ -57,19 +94,12 @@ export default function NuevaVentaScreen({ navigation }: any) {
     const existe = carrito.find((i) => i.producto.id === producto.id);
     if (existe) {
       if (existe.cantidad >= producto.stock) {
-        Alert.alert(
-          "Sin stock",
-          `Solo hay ${producto.stock} unidades disponibles`,
-        );
+        Alert.alert("Sin stock", `Solo hay ${producto.stock} unidades disponibles`);
         return;
       }
-      setCarrito(
-        carrito.map((i) =>
-          i.producto.id === producto.id
-            ? { ...i, cantidad: i.cantidad + 1 }
-            : i,
-        ),
-      );
+      setCarrito(carrito.map((i) =>
+        i.producto.id === producto.id ? { ...i, cantidad: i.cantidad + 1 } : i,
+      ));
     } else {
       setCarrito([...carrito, { producto, cantidad: 1 }]);
     }
@@ -78,11 +108,9 @@ export default function NuevaVentaScreen({ navigation }: any) {
   const quitarDelCarrito = (productoId: number) => {
     const existe = carrito.find((i) => i.producto.id === productoId);
     if (existe && existe.cantidad > 1) {
-      setCarrito(
-        carrito.map((i) =>
-          i.producto.id === productoId ? { ...i, cantidad: i.cantidad - 1 } : i,
-        ),
-      );
+      setCarrito(carrito.map((i) =>
+        i.producto.id === productoId ? { ...i, cantidad: i.cantidad - 1 } : i,
+      ));
     } else {
       setCarrito(carrito.filter((i) => i.producto.id !== productoId));
     }
@@ -91,27 +119,19 @@ export default function NuevaVentaScreen({ navigation }: any) {
   const getCantidadEnCarrito = (productoId: number) =>
     carrito.find((i) => i.producto.id === productoId)?.cantidad ?? 0;
 
-  const total = carrito.reduce(
-    (acc, i) => acc + i.producto.precio * i.cantidad,
-    0,
-  );
+  const total = carrito.reduce((acc, i) => acc + i.producto.precio * i.cantidad, 0);
 
   const confirmarVenta = () => {
     if (carrito.length === 0) {
       Alert.alert("Error", "Agrega al menos un producto");
       return;
     }
-
     if (tipoPago === "credito") {
-      // ✅ Validar que haya cliente seleccionado
       if (!clienteSeleccionado) {
         Alert.alert("Error", "Selecciona un cliente para ventas a crédito");
         return;
       }
-
-      // ✅ Validar que no supere el límite de crédito disponible
-      const creditoDisponible =
-        clienteSeleccionado.limite_credito - clienteSeleccionado.saldo_deuda;
+      const creditoDisponible = clienteSeleccionado.limite_credito - clienteSeleccionado.saldo_deuda;
       if (total > creditoDisponible) {
         Alert.alert(
           "⚠️ Límite de crédito insuficiente",
@@ -125,7 +145,6 @@ export default function NuevaVentaScreen({ navigation }: any) {
         return;
       }
     }
-
     setModalResumen(true);
   };
 
@@ -146,17 +165,15 @@ export default function NuevaVentaScreen({ navigation }: any) {
       Alert.alert(
         "¡Venta registrada!",
         `Total: $${total.toLocaleString("es-CO", { minimumFractionDigits: 2 })}`,
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              setCarrito([]);
-              setClienteSeleccionado(null);
-              setTipoPago("efectivo");
-              navigation.goBack();
-            },
+        [{
+          text: "OK",
+          onPress: () => {
+            setCarrito([]);
+            setClienteSeleccionado(null);
+            setTipoPago("efectivo");
+            navigation.goBack();
           },
-        ],
+        }],
       );
     } catch (e) {
       Alert.alert("Error", "No se pudo registrar la venta");
@@ -171,10 +188,7 @@ export default function NuevaVentaScreen({ navigation }: any) {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backBtn}
-        >
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#1A56FF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Nueva Venta</Text>
@@ -194,25 +208,12 @@ export default function NuevaVentaScreen({ navigation }: any) {
         >
           {clienteSeleccionado ? (
             <View style={styles.clienteSelectorActivo}>
-              <View style={styles.clienteAvatar}>
-                <Text style={styles.clienteIniciales}>
-                  {clienteSeleccionado.nombre
-                    .split(" ")
-                    .map((n) => n[0])
-                    .slice(0, 2)
-                    .join("")
-                    .toUpperCase()}
-                </Text>
-              </View>
+              {/* ← foto o iniciales */}
+              <AvatarCliente cliente={clienteSeleccionado} size={40} />
               <View style={styles.clienteInfo}>
-                <Text style={styles.clienteNombre}>
-                  {clienteSeleccionado.nombre}
-                </Text>
+                <Text style={styles.clienteNombre}>{clienteSeleccionado.nombre}</Text>
                 <Text style={styles.clienteDeuda}>
-                  Deuda: $
-                  {clienteSeleccionado.saldo_deuda.toLocaleString("es-CO", {
-                    minimumFractionDigits: 2,
-                  })}
+                  Deuda: ${clienteSeleccionado.saldo_deuda.toLocaleString("es-CO", { minimumFractionDigits: 2 })}
                 </Text>
               </View>
               <TouchableOpacity onPress={() => setClienteSeleccionado(null)}>
@@ -222,9 +223,7 @@ export default function NuevaVentaScreen({ navigation }: any) {
           ) : (
             <View style={styles.clienteSelectorVacio}>
               <Ionicons name="person-add-outline" size={20} color="#888" />
-              <Text style={styles.clienteSelectorTexto}>
-                Seleccionar cliente
-              </Text>
+              <Text style={styles.clienteSelectorTexto}>Seleccionar cliente</Text>
               <Ionicons name="chevron-forward" size={18} color="#ccc" />
             </View>
           )}
@@ -233,36 +232,18 @@ export default function NuevaVentaScreen({ navigation }: any) {
         {/* Tipo de pago */}
         <Text style={styles.sectionTitle}>Tipo de pago</Text>
         <View style={styles.tiposPagoRow}>
-          {(
-            [
-              { key: "efectivo", label: "Efectivo", icon: "cash-outline" },
-              {
-                key: "transferencia",
-                label: "Transferencia",
-                icon: "phone-portrait-outline",
-              },
-              { key: "credito", label: "Crédito", icon: "time-outline" },
-            ] as const
-          ).map((t) => (
+          {([
+            { key: "efectivo", label: "Efectivo", icon: "cash-outline" },
+            { key: "transferencia", label: "Transferencia", icon: "phone-portrait-outline" },
+            { key: "credito", label: "Crédito", icon: "time-outline" },
+          ] as const).map((t) => (
             <TouchableOpacity
               key={t.key}
-              style={[
-                styles.tipoPagoBadge,
-                tipoPago === t.key && styles.tipoPagoBadgeActivo,
-              ]}
+              style={[styles.tipoPagoBadge, tipoPago === t.key && styles.tipoPagoBadgeActivo]}
               onPress={() => setTipoPago(t.key)}
             >
-              <Ionicons
-                name={t.icon}
-                size={18}
-                color={tipoPago === t.key ? "#fff" : "#555"}
-              />
-              <Text
-                style={[
-                  styles.tipoPagoText,
-                  tipoPago === t.key && styles.tipoPagoTextActivo,
-                ]}
-              >
+              <Ionicons name={t.icon} size={18} color={tipoPago === t.key ? "#fff" : "#555"} />
+              <Text style={[styles.tipoPagoText, tipoPago === t.key && styles.tipoPagoTextActivo]}>
                 {t.label}
               </Text>
             </TouchableOpacity>
@@ -286,9 +267,7 @@ export default function NuevaVentaScreen({ navigation }: any) {
           <View style={styles.emptyProductos}>
             <Ionicons name="cube-outline" size={36} color="#ddd" />
             <Text style={styles.emptyProductosText}>
-              {productos.length === 0
-                ? "No tienes productos en inventario"
-                : "No se encontraron productos"}
+              {productos.length === 0 ? "No tienes productos en inventario" : "No se encontraron productos"}
             </Text>
           </View>
         ) : (
@@ -298,10 +277,7 @@ export default function NuevaVentaScreen({ navigation }: any) {
               <View key={producto.id} style={styles.productoItem}>
                 <View style={styles.productoImgPlaceholder}>
                   {producto.foto_uri ? (
-                    <Image
-                      source={{ uri: producto.foto_uri }}
-                      style={{ width: 44, height: 44, borderRadius: 8 }}
-                    />
+                    <Image source={{ uri: producto.foto_uri }} style={{ width: 44, height: 44, borderRadius: 8 }} />
                   ) : (
                     <Ionicons name="cube-outline" size={24} color="#ccc" />
                   )}
@@ -309,22 +285,14 @@ export default function NuevaVentaScreen({ navigation }: any) {
                 <View style={styles.productoInfo}>
                   <Text style={styles.productoNombre}>{producto.nombre}</Text>
                   <Text style={styles.productoPrecio}>
-                    $
-                    {producto.precio.toLocaleString("es-CO", {
-                      minimumFractionDigits: 2,
-                    })}
+                    ${producto.precio.toLocaleString("es-CO", { minimumFractionDigits: 2 })}
                   </Text>
-                  <Text style={styles.productoStock}>
-                    Stock: {producto.stock}
-                  </Text>
+                  <Text style={styles.productoStock}>Stock: {producto.stock}</Text>
                 </View>
                 <View style={styles.cantidadControl}>
                   {cantidad > 0 ? (
                     <>
-                      <TouchableOpacity
-                        style={styles.cantidadBtn}
-                        onPress={() => quitarDelCarrito(producto.id)}
-                      >
+                      <TouchableOpacity style={styles.cantidadBtn} onPress={() => quitarDelCarrito(producto.id)}>
                         <Ionicons name="remove" size={18} color="#333" />
                       </TouchableOpacity>
                       <Text style={styles.cantidadNum}>{cantidad}</Text>
@@ -348,15 +316,9 @@ export default function NuevaVentaScreen({ navigation }: any) {
             <Text style={styles.carritoResumenTitle}>Resumen del carrito</Text>
             {carrito.map((item) => (
               <View key={item.producto.id} style={styles.carritoItem}>
-                <Text style={styles.carritoItemNombre}>
-                  {item.cantidad}x {item.producto.nombre}
-                </Text>
+                <Text style={styles.carritoItemNombre}>{item.cantidad}x {item.producto.nombre}</Text>
                 <Text style={styles.carritoItemTotal}>
-                  $
-                  {(item.producto.precio * item.cantidad).toLocaleString(
-                    "es-CO",
-                    { minimumFractionDigits: 2 },
-                  )}
+                  ${(item.producto.precio * item.cantidad).toLocaleString("es-CO", { minimumFractionDigits: 2 })}
                 </Text>
               </View>
             ))}
@@ -375,14 +337,10 @@ export default function NuevaVentaScreen({ navigation }: any) {
       {/* Botón confirmar */}
       {carrito.length > 0 && (
         <View style={styles.footerBtn}>
-          <TouchableOpacity
-            style={styles.confirmarBtn}
-            onPress={confirmarVenta}
-          >
+          <TouchableOpacity style={styles.confirmarBtn} onPress={confirmarVenta}>
             <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
             <Text style={styles.confirmarBtnText}>
-              Confirmar Venta · $
-              {total.toLocaleString("es-CO", { minimumFractionDigits: 2 })}
+              Confirmar Venta · ${total.toLocaleString("es-CO", { minimumFractionDigits: 2 })}
             </Text>
           </TouchableOpacity>
         </View>
@@ -404,9 +362,7 @@ export default function NuevaVentaScreen({ navigation }: any) {
               style={{ maxHeight: 400 }}
               ListEmptyComponent={
                 <View style={styles.emptyProductos}>
-                  <Text style={styles.emptyProductosText}>
-                    No hay clientes registrados
-                  </Text>
+                  <Text style={styles.emptyProductosText}>No hay clientes registrados</Text>
                 </View>
               }
               renderItem={({ item }) => (
@@ -417,23 +373,12 @@ export default function NuevaVentaScreen({ navigation }: any) {
                     setModalCliente(false);
                   }}
                 >
-                  <View style={styles.clienteAvatar}>
-                    <Text style={styles.clienteIniciales}>
-                      {item.nombre
-                        .split(" ")
-                        .map((n: string) => n[0])
-                        .slice(0, 2)
-                        .join("")
-                        .toUpperCase()}
-                    </Text>
-                  </View>
+                  {/* ← foto o iniciales en el modal */}
+                  <AvatarCliente cliente={item} size={42} />
                   <View style={styles.clienteInfo}>
                     <Text style={styles.clienteNombre}>{item.nombre}</Text>
                     <Text style={styles.clienteDeuda}>
-                      Deuda: $
-                      {item.saldo_deuda.toLocaleString("es-CO", {
-                        minimumFractionDigits: 2,
-                      })}
+                      Deuda: ${item.saldo_deuda.toLocaleString("es-CO", { minimumFractionDigits: 2 })}
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color="#ccc" />
@@ -457,10 +402,9 @@ export default function NuevaVentaScreen({ navigation }: any) {
 
             {clienteSeleccionado && (
               <View style={styles.resumenCliente}>
-                <Ionicons name="person-outline" size={16} color="#1A56FF" />
-                <Text style={styles.resumenClienteNombre}>
-                  {clienteSeleccionado.nombre}
-                </Text>
+                {/* ← foto en el resumen también */}
+                <AvatarCliente cliente={clienteSeleccionado} size={32} />
+                <Text style={styles.resumenClienteNombre}>{clienteSeleccionado.nombre}</Text>
               </View>
             )}
 
@@ -473,15 +417,9 @@ export default function NuevaVentaScreen({ navigation }: any) {
 
             {carrito.map((item) => (
               <View key={item.producto.id} style={styles.carritoItem}>
-                <Text style={styles.carritoItemNombre}>
-                  {item.cantidad}x {item.producto.nombre}
-                </Text>
+                <Text style={styles.carritoItemNombre}>{item.cantidad}x {item.producto.nombre}</Text>
                 <Text style={styles.carritoItemTotal}>
-                  $
-                  {(item.producto.precio * item.cantidad).toLocaleString(
-                    "es-CO",
-                    { minimumFractionDigits: 2 },
-                  )}
+                  ${(item.producto.precio * item.cantidad).toLocaleString("es-CO", { minimumFractionDigits: 2 })}
                 </Text>
               </View>
             ))}
@@ -494,19 +432,11 @@ export default function NuevaVentaScreen({ navigation }: any) {
             </View>
 
             <TouchableOpacity
-              style={[
-                styles.confirmarBtn,
-                { marginTop: 16 },
-                guardando && { opacity: 0.7 },
-              ]}
+              style={[styles.confirmarBtn, { marginTop: 16 }, guardando && { opacity: 0.7 }]}
               onPress={procesarVenta}
               disabled={guardando}
             >
-              <Ionicons
-                name="checkmark-circle-outline"
-                size={20}
-                color="#fff"
-              />
+              <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
               <Text style={styles.confirmarBtnText}>
                 {guardando ? "Procesando..." : "Procesar Venta"}
               </Text>
@@ -522,252 +452,67 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#F8F8F8" },
   scroll: { flex: 1, paddingHorizontal: 16 },
 
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-  },
+  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14, backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#F0F0F0" },
   backBtn: { padding: 4 },
-  headerTitle: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#111",
-    textAlign: "center",
-  },
-  carritoCount: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: "#1A56FF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  headerTitle: { flex: 1, fontSize: 18, fontWeight: "700", color: "#111", textAlign: "center" },
+  carritoCount: { width: 26, height: 26, borderRadius: 13, backgroundColor: "#1A56FF", alignItems: "center", justifyContent: "center" },
   carritoCountText: { color: "#fff", fontSize: 13, fontWeight: "700" },
 
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#111",
-    marginTop: 16,
-    marginBottom: 10,
-  },
+  sectionTitle: { fontSize: 15, fontWeight: "700", color: "#111", marginTop: 16, marginBottom: 10 },
 
-  clienteSelector: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#F0F0F0",
-    marginBottom: 4,
-    overflow: "hidden",
-  },
-  clienteSelectorVacio: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 14,
-    gap: 10,
-  },
+  clienteSelector: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 1, borderColor: "#F0F0F0", marginBottom: 4, overflow: "hidden" },
+  clienteSelectorVacio: { flexDirection: "row", alignItems: "center", padding: 14, gap: 10 },
   clienteSelectorTexto: { flex: 1, fontSize: 15, color: "#888" },
-  clienteSelectorActivo: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 14,
-    gap: 12,
-  },
-  clienteAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#EEF0FF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  clienteIniciales: { fontSize: 14, fontWeight: "700", color: "#1A56FF" },
+  clienteSelectorActivo: { flexDirection: "row", alignItems: "center", padding: 14, gap: 12 },
   clienteInfo: { flex: 1 },
   clienteNombre: { fontSize: 15, fontWeight: "700", color: "#111" },
   clienteDeuda: { fontSize: 12, color: "#888" },
 
   tiposPagoRow: { flexDirection: "row", gap: 8, marginBottom: 4 },
-  tipoPagoBadge: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    backgroundColor: "#fff",
-    gap: 4,
-  },
+  tipoPagoBadge: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: "#ddd", backgroundColor: "#fff", gap: 4 },
   tipoPagoBadgeActivo: { backgroundColor: "#1A56FF", borderColor: "#1A56FF" },
   tipoPagoText: { fontSize: 12, fontWeight: "600", color: "#555" },
   tipoPagoTextActivo: { color: "#fff" },
 
-  searchWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    marginBottom: 10,
-    height: 42,
-    borderWidth: 1,
-    borderColor: "#F0F0F0",
-    gap: 8,
-  },
+  searchWrap: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 10, paddingHorizontal: 12, marginBottom: 10, height: 42, borderWidth: 1, borderColor: "#F0F0F0", gap: 8 },
   searchInput: { flex: 1, fontSize: 14, color: "#333" },
 
-  productoItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: "#F0F0F0",
-  },
-  productoImgPlaceholder: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    backgroundColor: "#F5F5F5",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
+  productoItem: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: "#F0F0F0" },
+  productoImgPlaceholder: { width: 44, height: 44, borderRadius: 8, backgroundColor: "#F5F5F5", alignItems: "center", justifyContent: "center", marginRight: 12 },
   productoInfo: { flex: 1 },
-  productoNombre: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#111",
-    marginBottom: 2,
-  },
-  productoPrecio: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#1A56FF",
-    marginBottom: 2,
-  },
+  productoNombre: { fontSize: 14, fontWeight: "700", color: "#111", marginBottom: 2 },
+  productoPrecio: { fontSize: 14, fontWeight: "700", color: "#1A56FF", marginBottom: 2 },
   productoStock: { fontSize: 11, color: "#888" },
   cantidadControl: { flexDirection: "row", alignItems: "center", gap: 8 },
-  cantidadBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#F0F0F0",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  cantidadBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#F0F0F0", alignItems: "center", justifyContent: "center" },
   cantidadBtnAdd: { backgroundColor: "#1A56FF" },
-  cantidadNum: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#111",
-    minWidth: 20,
-    textAlign: "center",
-  },
+  cantidadNum: { fontSize: 16, fontWeight: "700", color: "#111", minWidth: 20, textAlign: "center" },
 
-  carritoResumen: {
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    padding: 16,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: "#F0F0F0",
-  },
-  carritoResumenTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#111",
-    marginBottom: 12,
-  },
-  carritoItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
+  carritoResumen: { backgroundColor: "#fff", borderRadius: 14, padding: 16, marginTop: 16, borderWidth: 1, borderColor: "#F0F0F0" },
+  carritoResumenTitle: { fontSize: 15, fontWeight: "700", color: "#111", marginBottom: 12 },
+  carritoItem: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
   carritoItemNombre: { fontSize: 14, color: "#555", flex: 1 },
   carritoItemTotal: { fontSize: 14, fontWeight: "600", color: "#111" },
-  carritoTotalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
-    paddingTop: 12,
-    marginTop: 4,
-  },
+  carritoTotalRow: { flexDirection: "row", justifyContent: "space-between", borderTopWidth: 1, borderTopColor: "#F0F0F0", paddingTop: 12, marginTop: 4 },
   carritoTotalLabel: { fontSize: 13, fontWeight: "700", color: "#888" },
   carritoTotal: { fontSize: 20, fontWeight: "700", color: "#1A56FF" },
 
-  footerBtn: {
-    padding: 16,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
-  },
-  confirmarBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#1A56FF",
-    borderRadius: 14,
-    padding: 16,
-    gap: 8,
-  },
+  footerBtn: { padding: 16, backgroundColor: "#fff", borderTopWidth: 1, borderTopColor: "#F0F0F0" },
+  confirmarBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#1A56FF", borderRadius: 14, padding: 16, gap: 8 },
   confirmarBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
 
   emptyProductos: { alignItems: "center", paddingVertical: 32, gap: 8 },
   emptyProductosText: { fontSize: 14, color: "#aaa" },
 
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  modalCard: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
+  modalCard: { backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 },
+  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
   modalTitle: { fontSize: 18, fontWeight: "700", color: "#111" },
 
-  clienteModalItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-    gap: 12,
-  },
+  clienteModalItem: { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F0F0F0", gap: 12 },
 
-  resumenCliente: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 8,
-    backgroundColor: "#EEF0FF",
-    padding: 10,
-    borderRadius: 8,
-  },
-  resumenClienteNombre: { fontSize: 14, fontWeight: "600", color: "#1A56FF" },
-  resumenTipoPago: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 16,
-  },
+  resumenCliente: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8, backgroundColor: "#EEF0FF", padding: 10, borderRadius: 8 },
+  resumenClienteNombre: { fontSize: 14, fontWeight: "600", color: "#1A56FF", flex: 1 },
+  resumenTipoPago: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 16 },
   resumenTipoPagoText: { fontSize: 14, color: "#555" },
 });
