@@ -305,12 +305,6 @@ export default function HomeScreen({ navigation }: any) {
 
         <View style={{ height: 100 }} />
       </ScrollView>
-
-      {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate("Sales")}>
-        <Ionicons name="add" size={28} color="#fff" />
-      </TouchableOpacity>
-
       {/* ── Modal editar negocio ─────────────────────────── */}
       <Modal visible={modalEditar} transparent animationType="slide">
         <KeyboardAvoidingView
